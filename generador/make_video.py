@@ -129,7 +129,7 @@ def chrome(c, gt, total, label=None):
         d.rounded_rectangle((x0, y0, x0 + tw + 68, y0 + 74), radius=37, fill=YEL)
         d.text((x0 + 34, y0 + 10), label, font=f, fill=BG)
     # barra de progreso (fuera de la zona de UI de Instagram)
-    y = 1540
+    y = 1575
     d.rounded_rectangle((140, y, W - 140, y + 10), radius=5, fill=(40, 40, 52))
     d.rounded_rectangle((140, y, 140 + (W - 280) * clamp(gt / total), y + 10), radius=5, fill=YEL)
 
@@ -140,7 +140,10 @@ def fmt_num(n):
 def scene_hook(c, t, s, gt):
     d = ImageDraw.Draw(c)
     p = ease_back(prog(t, 0.0, 0.5))
-    bolt(d, W / 2, 590, 120 * p, YEL)
+    if s.get("art"):
+        draw_art(c, t, s)
+    else:
+        bolt(d, W / 2, 590, 120 * p, YEL)
     img = s["_title"]
     place(c, img, W / 2, 1060, scale=0.6 + 0.4 * ease_back(prog(t, 0.25, 0.5)), alpha=ease_out(prog(t, 0.25, 0.3)))
     sub = s["_sub"]
@@ -148,6 +151,7 @@ def scene_hook(c, t, s, gt):
 
 def scene_fact(c, t, s, gt):
     dur = s["dur"]
+    draw_art(c, t, s)
     # número / contador grande
     if "count_from" in s:
         k = ease_out(prog(t, 0.4, s.get("count_dur", 1.6)))
@@ -164,8 +168,117 @@ def scene_fact(c, t, s, gt):
             place(c, s["_numcap"], W / 2, 920, alpha=ease_out(prog(t, 0.6, 0.4)))
     elif "_big" in s:
         place(c, s["_big"], W / 2, 760, scale=ease_back(prog(t, 0.15, 0.45)), alpha=ease_out(prog(t, 0.15, 0.25)))
-    place(c, s["_head"], W / 2, 1110 + 40 * (1 - ease_out(prog(t, 0.35, 0.45))), alpha=ease_out(prog(t, 0.35, 0.45)))
-    place(c, s["_body"], W / 2, 1350 + 40 * (1 - ease_out(prog(t, 1.8, 0.5))), alpha=ease_out(prog(t, 1.8, 0.5)))
+    elif "timeline" in s:
+        draw_timeline(c, t, s)
+    elif "bars" in s:
+        draw_bars(c, t, s)
+    hy, by = s.get("head_y", 1110), s.get("body_y", 1350)
+    ha, ba = s.get("head_at", 0.35), s.get("body_at", 1.8)
+    place(c, s["_head"], W / 2, hy + 40 * (1 - ease_out(prog(t, ha, 0.45))), alpha=ease_out(prog(t, ha, 0.45)))
+    place(c, s["_body"], W / 2, by + 40 * (1 - ease_out(prog(t, ba, 0.5))), alpha=ease_out(prog(t, ba, 0.5)))
+
+_art_cache = {}
+ART_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "art")
+def art_img(name, h):
+    k = (name, h)
+    if k not in _art_cache:
+        im = Image.open(os.path.join(ART_DIR, name + ".png")).convert("RGBA")
+        _art_cache[k] = im.resize((int(im.width * h / im.height), h), Image.LANCZOS)
+    return _art_cache[k]
+
+def venus_img(t, r):
+    """Planeta Venus dibujado: bandas de nubes que se desplazan lentamente."""
+    size = 2 * r
+    yy, xx = np.mgrid[0:size, 0:size].astype(np.float64)
+    dx, dy = (xx - r) / r, (yy - r) / r
+    rr = np.sqrt(dx ** 2 + dy ** 2)
+    inside = rr <= 1
+    lon = np.arcsin(np.clip(dx / np.sqrt(np.clip(1 - dy ** 2, 1e-6, 1)), -1, 1)) + t * 0.35
+    band = np.sin(dy * 9 + np.sin(lon * 3 + dy * 4) * 0.8) * 0.5 + 0.5
+    base = np.array([226, 160, 70.0]); light = np.array([248, 214, 140.0])
+    col = base * (1 - band[..., None]) + light * band[..., None]
+    shade = np.clip(1.15 - 0.55 * np.sqrt(np.clip((dx + 0.45) ** 2 + (dy + 0.4) ** 2, 0, 4)), 0.35, 1.1)
+    col = np.clip(col * shade[..., None], 0, 255)
+    alpha = np.clip((1 - rr) * r, 0, 1) * 255
+    arr = np.dstack([col, alpha]).astype(np.uint8)
+    arr[~inside, 3] = 0
+    return Image.fromarray(arr, "RGBA")
+
+def draw_art(c, t, s):
+    """Capas de ilustraciones: [{img, x, y, h, at, anim}] — anim: pop, float, spin, venus."""
+    for a in s.get("art", []):
+        k = ease_back(prog(t, a.get("at", 0.2), 0.55))
+        if k <= 0.01: continue
+        al = ease_out(prog(t, a.get("at", 0.2), 0.3))
+        dy = 0
+        if "float" in a.get("anim", ""):
+            dy = math.sin((t - a.get("at", 0)) * 1.6 + a.get("x", 0) / 200) * 10
+        if a["img"] == "venus":
+            img = venus_img(t, a["h"] // 2)
+        else:
+            img = art_img(a["img"], a["h"])
+        if "wobble" in a.get("anim", ""):
+            img = img.rotate(math.sin(t * 3.2) * 4, resample=Image.BICUBIC, expand=True)
+        place(c, img, a["x"], a["y"] + dy, scale=k, alpha=al)
+
+def _label(text, path, size, color):
+    f = font(path, size)
+    img = Image.new("RGBA", (int(f.getlength(text)) + 20, int(size * 1.4)), (0, 0, 0, 0))
+    ImageDraw.Draw(img).text((10, 0), text, font=f, fill=color)
+    return img
+
+def draw_timeline(c, t, s):
+    """Línea de tiempo: puntos [{x, name, year, at}] y tramos [{a, b, label, at}]."""
+    tl = s["timeline"]; y = tl.get("y", 790)
+    x0, x1 = 160, W - 160
+    d = ImageDraw.Draw(c)
+    lp = ease_out(prog(t, 0.2, 0.9))
+    d.rounded_rectangle((x0, y - 5, x0 + (x1 - x0) * lp, y + 5), radius=5, fill=(70, 70, 88))
+    pts = tl["points"]
+    for p in pts:
+        px = x0 + (x1 - x0) * p["x"]; k = ease_back(prog(t, p["at"], 0.45))
+        if k <= 0: continue
+        r = 22 * k
+        d.ellipse((px - r, y - r, px + r, y + r), fill=p.get("color_rgb", YEL))
+        d.ellipse((px - r * 0.45, y - r * 0.45, px + r * 0.45, y + r * 0.45), fill=BG)
+        a = ease_out(prog(t, p["at"], 0.4))
+        if tl.get("names_below"):
+            place(c, _label(p["name"], FONT_B, 42, WHITE), px, y + 62, alpha=a)
+            place(c, _label(p["year"], FONT_M, 36, GREY), px, y + 110, alpha=a)
+        else:
+            place(c, _label(p["name"], FONT_B, 46, WHITE), px, y - 85, alpha=a)
+            place(c, _label(p["year"], FONT_M, 38, GREY), px, y + 62, alpha=a)
+    for g in tl.get("gaps", []):
+        a = ease_out(prog(t, g["at"], 0.5))
+        if a <= 0: continue
+        xa = x0 + (x1 - x0) * pts[g["a"]]["x"]; xb = x0 + (x1 - x0) * pts[g["b"]]["x"]
+        gy = y + (185 if tl.get("names_below") else 135)
+        col = YEL if g.get("hl") else (150, 150, 165)
+        mid = (xa + xb) / 2; half = (xb - xa) / 2 * ease_out(prog(t, g["at"], 0.6)) - 28
+        if half > 0:
+            d.line((mid - half, gy, mid + half, gy), fill=col, width=4)
+            d.line((mid - half, gy - 14, mid - half, gy + 14), fill=col, width=4)
+            d.line((mid + half, gy - 14, mid + half, gy + 14), fill=col, width=4)
+        place(c, _label(g["label"], FONT_B, 40, col), mid, gy + 46, alpha=a)
+
+def draw_bars(c, t, s):
+    """Barras comparativas: [{name, value, unit, at}] con escala común."""
+    b = s["bars"]; items = b["items"]; vmax = max(i["value"] for i in items)
+    d = ImageDraw.Draw(c)
+    x0, maxw = 120, W - 240
+    for n, it in enumerate(items):
+        y = b.get("y", 640) + n * b.get("gap", 240)
+        a = ease_out(prog(t, it["at"], 0.4))
+        if a <= 0: continue
+        place(c, _label(it["name"], FONT_B, 48, WHITE), x0 + _label(it["name"], FONT_B, 48, WHITE).width / 2 - 10, y, alpha=a)
+        k = ease_out(prog(t, it["at"] + 0.2, 1.3))
+        w = maxw * it["value"] / vmax * k
+        col = YEL if it.get("hl") else (120, 120, 140)
+        d.rounded_rectangle((x0, y + 50, x0 + max(w, 30), y + 120), radius=35, fill=col)
+        val = f"{int(round(it['value'] * k))} {it['unit']}"
+        lab = _label(val, FONT_B, 42, BG if it.get("hl") else WHITE)
+        if w > lab.width + 40:
+            place(c, lab, x0 + w - lab.width / 2 - 20, y + 88)
 
 def scene_cta(c, t, s, gt):
     place(c, s["_title"], W / 2, 860, scale=0.7 + 0.3 * ease_back(prog(t, 0.0, 0.5)), alpha=ease_out(prog(t, 0, 0.3)))
@@ -267,6 +380,36 @@ def music(total, cuts, path, sr=44100):
     with wave.open(path, "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
 
+def mix_voice(spec, scenes, music_path, total, sr=44100):
+    """Coloca cada línea de la narración al inicio de su escena y baja la música debajo de la voz.
+    spec["voice"] = mp3 con todas las líneas; spec["voice_lines"] = [{start, dur}] (de vidIQ)."""
+    import wave
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", spec["voice"], "-f", "s16le", "-ac", "1", "-ar", str(sr), "-"],
+                         check=True, capture_output=True).stdout
+    voice = np.frombuffer(raw, np.int16).astype(np.float64) / 32768
+    with wave.open(music_path) as w:
+        mus = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float64) / 32768
+    n = int(total * sr)
+    vtrack = np.zeros(n)
+    start = 0.0
+    for s, ln in zip(scenes, spec["voice_lines"]):
+        a, b = int(ln["start"] * sr), int((ln["start"] + ln["dur"]) * sr)
+        seg = voice[a:b]
+        o = int((start + s.get("voice_delay", 0.15)) * sr)
+        seg = seg[:max(0, n - o)]
+        vtrack[o:o + len(seg)] += seg
+        start += s["dur"]
+    # ducking: envolvente suave de la voz
+    env = np.abs(vtrack)
+    k = int(0.3 * sr); env = np.convolve(env, np.ones(k) / k, mode="same")
+    env = np.clip(env / (env.max() + 1e-9) * 4, 0, 1)
+    mus_gain = 0.32 - 0.20 * env
+    out = vtrack * 1.0 + mus[:n] * mus_gain
+    out = out / (np.abs(out).max() + 1e-9) * 0.95
+    with wave.open(music_path, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((out * 32767).astype(np.int16).tobytes())
+
 def main():
     spec = json.load(open(sys.argv[1], encoding="utf-8"))
     outdir = sys.argv[2]; os.makedirs(outdir, exist_ok=True)
@@ -289,6 +432,8 @@ def main():
     with open(f"{outdir}/list.txt", "w") as f:
         for p in files: f.write(f"file '{os.path.abspath(p)}'\n")
     music(total, [0.0] + cuts[:-1], f"{outdir}/music.wav")
+    if spec.get("voice"):
+        mix_voice(spec, scenes, f"{outdir}/music.wav", total)
     final = spec.get("output", f"{outdir}/video.mp4")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", f"{outdir}/list.txt",
                     "-c", "copy", f"{outdir}/silent.mp4"], check=True)

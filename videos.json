@@ -7,5 +7,14 @@
     "tema": "Cuerpo humano",
     "video": "videos/dato-001.mp4",
     "miniatura": "videos/dato-001.jpg"
+  },
+  {
+    "id": "002",
+    "fecha": "2026-11-19",
+    "titulo": "3 datos que te van a romper la cabeza",
+    "descripcion": "Cleopatra vivió más cerca de la llegada a la Luna que de las pirámides, Oxford es más antigua que el Imperio azteca y en Venus un día dura más que un año.",
+    "tema": "Historia y espacio",
+    "video": "videos/dato-002.mp4",
+    "miniatura": "videos/dato-002.jpg"
   }
 ]

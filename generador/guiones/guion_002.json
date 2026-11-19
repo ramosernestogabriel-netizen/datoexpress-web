@@ -1,0 +1,231 @@
+{
+  "id": "002",
+  "titulo": "3 datos que te van a romper la cabeza",
+  "output": "videos/dato-002.mp4",
+  "voice_lines": [
+    {
+      "start": 0.0,
+      "dur": 4.833
+    },
+    {
+      "start": 4.833,
+      "dur": 9.796
+    },
+    {
+      "start": 14.629,
+      "dur": 10.684
+    },
+    {
+      "start": 25.313,
+      "dur": 9.561
+    },
+    {
+      "start": 34.873,
+      "dur": 5.068
+    }
+  ],
+  "scenes": [
+    {
+      "type": "hook",
+      "dur": 5.3,
+      "title": "3 datos que te van a *romper la cabeza*",
+      "sub": "El último parece imposible",
+      "art": [
+        {
+          "img": "cerebro",
+          "x": 540,
+          "y": 610,
+          "h": 360,
+          "at": 0.0,
+          "anim": "wobble float"
+        }
+      ]
+    },
+    {
+      "type": "fact",
+      "dur": 10.3,
+      "label": "DATO 1/3",
+      "timeline": {
+        "y": 820,
+        "points": [
+          {
+            "x": 0.0,
+            "name": "Pirámide",
+            "year": "2560 a.C.",
+            "at": 4.0
+          },
+          {
+            "x": 0.55,
+            "name": "Cleopatra",
+            "year": "69 a.C.",
+            "at": 0.4
+          },
+          {
+            "x": 1.0,
+            "name": "Luna",
+            "year": "1969",
+            "at": 2.4
+          }
+        ],
+        "gaps": [
+          {
+            "a": 0,
+            "b": 1,
+            "label": "2.490 años",
+            "at": 5.6
+          },
+          {
+            "a": 1,
+            "b": 2,
+            "label": "2.038 años",
+            "at": 6.6,
+            "hl": true
+          }
+        ],
+        "names_below": true
+      },
+      "head": "Cleopatra vivió más cerca de la *Luna* que de las *pirámides*",
+      "head_y": 1235,
+      "head_at": 0.3,
+      "body": "Cuando nació, la Gran Pirámide ya tenía casi 2.500 años.",
+      "body_y": 1450,
+      "body_at": 5.8,
+      "art": [
+        {
+          "img": "cleopatra",
+          "x": 578,
+          "y": 640,
+          "h": 230,
+          "at": 0.4,
+          "anim": "float"
+        },
+        {
+          "img": "luna",
+          "x": 920,
+          "y": 650,
+          "h": 200,
+          "at": 2.4,
+          "anim": "float"
+        },
+        {
+          "img": "piramide",
+          "x": 175,
+          "y": 650,
+          "h": 190,
+          "at": 4.0,
+          "anim": "float"
+        }
+      ]
+    },
+    {
+      "type": "fact",
+      "dur": 11.2,
+      "label": "DATO 2/3",
+      "timeline": {
+        "y": 820,
+        "points": [
+          {
+            "x": 0.12,
+            "name": "Oxford",
+            "year": "1096",
+            "at": 4.3
+          },
+          {
+            "x": 0.88,
+            "name": "Tenochtitlan",
+            "year": "1325",
+            "at": 7.4
+          }
+        ],
+        "gaps": [
+          {
+            "a": 0,
+            "b": 1,
+            "label": "229 años",
+            "at": 8.7,
+            "hl": true
+          }
+        ],
+        "names_below": true
+      },
+      "head": "Oxford es más antigua que el *Imperio azteca*",
+      "head_y": 1235,
+      "head_at": 0.3,
+      "body": "En Oxford ya se enseñaba 229 años antes.",
+      "body_y": 1450,
+      "body_at": 8.9,
+      "art": [
+        {
+          "img": "oxford",
+          "x": 251,
+          "y": 640,
+          "h": 230,
+          "at": 4.3,
+          "anim": "float"
+        },
+        {
+          "img": "templo",
+          "x": 829,
+          "y": 640,
+          "h": 230,
+          "at": 7.4,
+          "anim": "float"
+        }
+      ]
+    },
+    {
+      "type": "fact",
+      "dur": 10.0,
+      "label": "DATO 3/3",
+      "bars": {
+        "y": 830,
+        "items": [
+          {
+            "name": "Un día en Venus",
+            "value": 243,
+            "unit": "días",
+            "at": 3.0,
+            "hl": true
+          },
+          {
+            "name": "Un año en Venus",
+            "value": 225,
+            "unit": "días",
+            "at": 6.2
+          }
+        ],
+        "gap": 175
+      },
+      "head": "En *Venus* un día dura más que un *año*",
+      "head_y": 1280,
+      "head_at": 0.3,
+      "body": "Gira tan lento que da la vuelta al Sol antes de completar un giro.",
+      "body_y": 1465,
+      "body_at": 7.6,
+      "art": [
+        {
+          "img": "sol",
+          "x": 190,
+          "y": 600,
+          "h": 180,
+          "at": 0.2,
+          "anim": "float"
+        },
+        {
+          "img": "venus",
+          "x": 560,
+          "y": 650,
+          "h": 270,
+          "at": 0.4,
+          "anim": "float"
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "dur": 5.8,
+      "title": "¿Cuál te *voló la cabeza?*",
+      "sub": "Un dato nuevo *todos los días*"
+    }
+  ]
+}
